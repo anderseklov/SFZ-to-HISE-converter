@@ -1,0 +1,427 @@
+
+<!-- SFZ to HISE - translator application / converter
+    > Written by Anders Eklöv and licensed under the MIT open source license.
+    > Client-side vanilla Javascript, no frameworks used and made with compatibility in mind.
+    > Contact: twitter.com/anderseklov or https://keypleezer.com/support/contact-us/ 
+    > Use in downloaded version in any modern web browser, or on:
+    >> https://keypleezer.com/sfz-to-hise-converter/
+    > version 0.5.2
+-->
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>SFZ to HISE translator / converter tool</title>
+
+
+        <style>
+            html { width: 100%; overflow-y: scroll; }
+            body { padding: 12px 25px 30px; margin: 0; }
+            body, html { background: #000; color: #c6c6c6; line-height: 1.6; font-family: Helvetica, Arial, sans-serif; }
+            #progressBarWrapper { 
+                background-color: #e6e6e6; border: 3px solid #e4e4e4; color: #222; 
+                box-sizing: border-box;
+                overflow: hidden; 
+            }
+            #progressBar    { width: 90%; float: left; }
+            #theBar         { width: 0%; height: 20px; background-color: #4CAF50; }
+            #percentage_feedback { 
+                text-align: center; font-size: 0.75em; line-height: 1.8;
+                width: 10%; box-sizing: border-box; 
+                float: left; 
+            }
+
+            h1 { margin-bottom: 0.6em; line-height: 1.5; }
+            a { color: #ffeab7; }
+            a:hover { color: #fff4db; }
+
+            .app-footer { color: #aaa; }
+            .app-footer p { margin-bottom: 12px; } 
+
+            strong { color: #bebebe; }
+            code { font-size: 1.18em; color: #e4aaaa; }
+
+
+            hr { height: 2px; border: none; color: #333; background: #333; padding: 0; margin: 5px; }
+            input.inputTextField {
+              background: #222; color: #aaa;
+              padding: 12px 15px 12px 10px; outline: none; }
+
+            button { 
+                border: none; border-radius: 7px; padding: 10px 14px; margin-right: 15px; margin-bottom: 12px;
+                background: #333; color: #bbb; outline: none; cursor: pointer;
+            }
+            button:hover                { background: #444; color: #ccc; }
+            button.button-green         { padding: 14px 22px; background: #3eb158; color: #dbe8d3; }
+            button.button-green:hover   { background: #4ccc69; color: #fff; }
+            #copyHiseMapButton, #copyExtendedObjButton { background-color: #643689; }
+
+            .col_half { width: 50%; margin: 0; padding: 0; float: left; }
+
+            /* expanding divs for sfz and hise data - these are also included in app plublished on keypleezer.com */
+            .outputBasicDiv {
+              height: 300px; min-height: 300px; box-sizing: border-box; padding: 20px 0 25px 18px;
+              background: #333; color: #aaa;
+              overflow: hidden; overflow-y: scroll;
+            }
+            .expandDiv { 
+                height: auto !important; background: #333 !important; color: #bbb;
+                overflow-x: scroll;
+                transition-property: width;
+                transition-duration: 0.1s; 
+                transition-timing-function: ease-in-out;
+            }
+
+
+            #statsDiv       { padding: 20px 0; color: #ddd; }
+            #statsDiv h2    { font-family: monospace; }
+            #stats_statsOutput { 
+                background-color: #222; padding: 12px 14px; margin-bottom: 26px; min-height: 120px; 
+                font-size: 0.85em; overflow: scroll; 
+            }
+
+            .user_inputs       { clear: both; }
+            .user_input_full   { width: 100%; float: none; clear: both; }
+            .user_input_left   { width: 50%; float: left; }
+            .user_input_right  { width: 50%; float: left; }
+            div.user_inputs span  { color: #989898; }
+            div.user_inputs .sub-choice { padding-left: 18px; padding-top: 10px; }
+            div.user_inputs .sub-choice span { padding-top: 7px; padding-bottom: 10px; display: inline-block; }
+
+            .clear { clear: both; }
+            .user_inputs .clear { height: 14px; } /* keeps settings spaced a bit */
+            .spacerMini     { height: 10px; }
+            .spacerSmall    { height: 18px; } 
+            .spacerMedium   { height: 30px; }
+            .notopmargin    { margin-top: 0; }
+
+        </style>
+
+    </head>
+    <body>
+
+        <h1>SFZ to HISE translator / converter application</h1>
+        <p>
+            <a href="http://keypleezer.com/sfz-to-hise-converter/manual/" target="_blank">
+                Read SFZ to HISE User Manual >>
+            </a>&nbsp; | &nbsp;
+            <a href="#about-info" title="Go to SFZ to HISE converter's about information, last on this page.">
+                about this application
+            </a>.
+        </p>    
+        <div class="spacerSmall"></div>
+
+        
+        
+        <!-- SFZ to HISE APP - USER INPUT & SETTINGS AREA (copy-paste top) -->
+        <div class="container user_inputs">    
+
+            <p style="font-size: 1.2em; margin-block-start: 0; margin: 0 0 22px;">
+                <strong>User settings - choose how to process your SFZ document:</strong>
+            </p>
+
+            <!-- form code from Canvas html theme (proprietary, used on KeyPleezer.com) - not included in this 
+                open source distributed code, but used with above CSS code instead of Canvas code.
+            -->
+
+            <form class="" action="" method="post">
+
+                <div class="form-row">
+                    <div class="form-group col_half">
+                        <label for="inputfile">Choose an SFZ file from your computer:</label>
+                        <br>
+                        <input type="file" name="inputfile" size="200" style="padding: 3px 0 0;" id="inputfile">
+                    </div>
+                    <div class="form-group col_half col_last">
+                        <label for="setting_inputMapName">Desired sample map name:</label>
+                        <span>&nbsp;(<em>Defaults to 'sfz-to-HISE-convert', if left empty</em>)</span>
+                        <input type="text" name="setting_inputMapName" id="setting_inputMapName" class="form-control inputTextField">
+                    </div>
+                </div>
+
+                <div class="clear"></div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input
+                            type="checkbox"
+                            class="checkbox-style" id="s_debug_sw" name="s_debug_sw">
+                        <label for="s_debug_sw" class="form-check-label">Debug mode on </label> 
+                        <span>(<em>open Developer Tools in browser to view</em>)</span>
+                    </div>
+                </div>
+
+                <div class="clear"></div>
+
+                <div class="form-row">
+                    <div class="col_half">
+                        <input
+                            type="checkbox"
+                            class="checkbox-style" id="s_samplesPrefix_sw" name="s_samplesPrefix_sw">
+                        <label for="s_samplesPrefix_sw" class="form-check-label">Sample path prefix: </label>
+                        <span>(<em>ex 'my-custom-initial-folder/'</em>)</span>
+                    </div>
+                    <div class="col_half col_last">
+                        <input type="text" name="s_samplesPrefix" id="s_samplesPrefix" class="form-control inputTextField">
+                    </div>
+                </div>
+
+
+                <!-- not yet finished - under integration - using group_label...  
+                <div class="spacerSmall clear"></div>
+                
+                <div class="form-group">
+                    <input
+                        type="checkbox"
+                        class="checkbox-style" id="s_samplesGroupLabelAsMiddle_sw" name="s_samplesGroupLabelAsMiddle_sw">
+                    <label for="s_samplesGroupLabelAsMiddle_sw" class="form-check-label">Use opcode '<strong>group_label</strong>' as group sub-folder path </label>
+                    <span>(<em>between path prefix (if filled) and original sample path. Ex: prefix-path / group_label / main-sample-path/file.wav</em>) [BETA]</span>
+
+                    <div class="sub-choice">
+                        <span>Swap spaces in '<strong>group_label</strong>' values (<em>replace spaces in paths or names</em>)</span>
+                        <div>
+                            <input id="radio-1" class="radio-style" name="s_groupLabel_swapspace_radioGr" type="radio" checked>
+                            <label for="radio-1" class="radio-style-1-label radio-small">leave as spaces (<em>no change</em>)</label>
+                        </div>
+                        <div>
+                            <input id="radio-2" class="radio-style" name="s_groupLabel_swapspace_radioGr" type="radio">
+                            <label for="radio-2" class="radio-style-2-label radio-small">swap for hyphens ('-')</label>
+                        </div>
+                        <div>
+                            <input id="radio-3" class="radio-style" name="s_groupLabel_swapspace_radioGr" type="radio">
+                            <label for="radio-3" class="radio-style-3-label radio-small">swap for underlines ('_')</label>
+                        </div>
+                    </div>
+                </div>
+                -->
+
+                
+                <div class="spacerSmall clear"></div>
+                
+                <div class="form-group">
+
+                    <div class="radio-buttons">
+
+                        <p>Choose behaviour in case no value is found for a HISE tag:</p>
+                        <div>
+                            <input id="s_defaultNoValue_radioGr_1" class="radio-style" name="s_defaultNoValue_radioGr" type="radio" value="0" checked>
+                            <label for="s_defaultNoValue_radioGr_1" class="radio-style-1-label radio-small">insert tag with empty string <span>(<em>like Volume=""</em>)</span></label>
+                        </div>
+                        <!-- not finished compiling hise default values, so omitting this for now.
+                        <div>
+                            <input id="s_defaultNoValue_radioGr_2" class="radio-style" name="s_defaultNoValue_radioGr" type="radio" value="1">
+                            <label for="s_defaultNoValue_radioGr_2" class="radio-style-2-label radio-small">use default HISE values <span>(<em>like Volume="0"</em>)</span></label>
+                        </div> 
+                        -->
+                        <div>
+                            <input id="s_defaultNoValue_radioGr_3" class="radio-style" name="s_defaultNoValue_radioGr" type="radio" value="1">
+                            <label for="s_defaultNoValue_radioGr_3" class="radio-style-3-label radio-small">omit tag altogether <span>(<em>nothing is inserted</em>)</span></label>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="clear"></div>
+
+                <div class="form-group">
+                     <input
+                        type="checkbox"
+                        class="checkbox-style" id="s_samplesSequencePosition_sw" name="s_samplesSequencePosition_sw">
+                    <label for="s_samplesSequencePosition_sw" class="form-check-label">Use region opcode '<strong>seq_position</strong>' as Round Robin groups </label>
+                    <span>(<em>overrides normal group handling</em>) [BETA]</span>
+                </div>
+
+                <div class="form-group">
+                     <input
+                        type="checkbox"
+                        class="checkbox-style" id="s_arraysInsteadOfObjects_sw" name="s_arraysInsteadOfObjects_sw">
+                    <label for="s_arraysInsteadOfObjects_sw" class="form-check-label">Use array instead of object and keys for regions/samples </label>
+                    <span>(<em>makes an array of objects in stead of and object with numbered keys, for sample-objects in the extendedOpcodesOutput object.</em>)</span>
+                </div>
+
+
+                
+
+            </form>
+
+        </div><!-- END - USER INPUT & SETTINGS AREA (copy-paste top) -->
+
+
+        <br><!-- not for keypleezer site -->
+
+
+
+        <!-- SFZ file load and HISE output map display area - including button for expanding text view (copy-paste middle) -->
+        <section id="sfz-input">
+
+            <div class="container">
+                <div class="spacerSmall"></div>
+                <div class="col_two_fifth">
+                    <h2 class="notopmargin">SFZ file input contents</h2>
+                    <button name="sfzButton" id="expandSfzButton" class="button button-3d button-rounded button-yellow button-light" onclick="toggleExpandDiv(event.target.id)">Expand SFZ input</button>
+                </div>
+                <div class="col_three_fifth col_last">
+                    <div class="spacerSmall"></div>
+                    <p>The contents of your selected SFZ file will appear below. Review it, then press the green button. Use "Expand SFZ input" to view the full content of the loaded file.</p>
+                </div>
+            </div>
+            
+            <div class="outputWrapper sfz_color">
+                <div id="sfzOutputParent" class="outputBasicDiv">
+                    <pre id="outputFileReadData">When you choose a file, the contents will show up here.</pre>
+                </div>
+            </div>
+
+        </section>
+
+
+        <section id="hise-output">
+            <div class="spacerMedium"></div>
+            <!-- HISE SampleMap output -->
+            <div class="container">
+                <div class="spacerSmall"></div>
+                <div class="col_half">
+                    <h2 class="notopmargin">HISE XML Samplemap output</h2>
+                    <p>
+                        The HISE Samplemap XML data will be outputted below upon clicking the green button. 
+                        Simply mark it and copy-paste it into an XML (.xml) document using a text-editor (code editor), or use the buttons below. 
+                        In the browser's <strong>Developer Tools -> Console</strong> you will also find samplemap, opcodes object and log messges.
+                    </p>
+
+                    <button name="hiseButton" id="copyHiseMapButton" class="button button-3d button-small button-rounded button-yellow button-light" onclick="copyToClipBoard(hiseMapOutput_clipboard, 'HISE Samplemap (XML)')">SampleMap to Clipboard</button>
+
+                    <button name="hiseButton" id="copyExtendedObjButton" class="button button-3d button-small button-rounded button-yellow button-light" onclick="copyToClipBoard(extendedOpcodesOutput_clipboard, 'Extended Opcodes Object (JSON)')">Extended Object to Clipboard</button>
+
+                    <button name="hiseButton" id="copyExtendedObjButton" class="button button-3d button-small button-rounded button-yellow button-light" onclick="copyToClipBoardInVar(extendedOpcodesOutput_clipboard, 'Extended Opcodes Object (JSON) in variable (var x = {})', 'sfz_to_hise_extended_object', 'var')">Extended Object in var to Clipboard</button>
+
+                    <button name="hiseButton" id="expandHiseButton" class="button button-3d button-small button-rounded button-leaf button-light" onclick="toggleExpandDiv(event.target.id)">Expand HISE output</button>
+
+                    <br><br>
+                </div>
+                <div class="col_half col_last">
+                    <div class="spacerMini"></div>
+                    <button type="button" class="button button-3d button-rounded button-green" name="button" onclick="parseSfzToHise();">CONVERT SFZ TO HISE</button>
+                    <div class="spacerSmall"></div>
+                    <div id="progressBarWrapper">
+                        <div id="progressBar">
+                            <div id="theBar"></div>
+                        </div>
+                        <div id="percentage_feedback">0%</div>
+                    </div>
+                    <div class="spacerSmall clear"></div>
+                    <h4>Processing log:</h4>
+                    <pre id="stats_statsOutput"></pre>
+                </div>
+            </div>
+            <!-- HISE SampleMap output - text area output -->
+            <div class="outputWrapper hise_color">
+                <div id="hiseOutputParent" class="outputBasicDiv">
+                    <pre id="outputHiseMap">HISE output sample map will show up here upon successful conversion...</pre>
+                </div>
+            </div>
+
+            <br><br><br>
+
+        </section>
+        <!-- END - SFZ file load and HISE output map display area (copy-paste middle) -->
+
+
+
+        <!-- SFZ to HISE - app FOOTER with description (copy-paste bottom) -->
+        <div class="container app-footer" id="about-info">
+
+            <h2>About SFZ to HISE converter / translator</h2>
+            <p>
+                This tool uses pure client-side JavaScript (no frameworks) to translate 
+                from the SFZ markup language and create 2 separate outputs. The first is a HISE samplemap and the second is a JSON object 
+                literal with data not supported in the HISE samplemap structure, but sometimes useful 
+                for your own development of VST instruments or data extraction. To view or access the JSON object you can click the copy to clipboard buttons
+                on the user interface or access the raw JavaScript object via a modern web browser's 'Development Tools' console output messages). 
+                The Dev Tools console will also output the HISE samplemap and the JSON formatted object as a backup if the copy-buttons should fail in a browser. It is also the place to go for any error log messages (using 'Debug mode on')
+
+                <!-- What you make of it later is up to you. Fork it on Github and integrate it into your 
+                own workflow, or change it, extend it and make it your own. -->
+
+            </p>
+            <p><strong>The buttons in the HISE conversion area can copy output data:</strong></p>
+                
+            <ul>
+                <li>
+                    <strong>SampleMap to Clipboard</strong>: 
+                    Copies the generated HISE samplemap to the clipboard.
+                </li>
+                <li>
+                    <strong>Extended Object to Clipboard</strong>: 
+                    Copies the extracted opcodes object with all found and stored data to the clipboard.
+                </li>
+                <li>
+                    <strong>Extended Object in var to Clipboard</strong>: 
+                    Copies the same object but inside a variable <code>var name = { data };</code> to the clipboard. For easy copy-paste into a file.
+                </li>
+            </ul>
+
+            <p>
+                <a href="https://keypleezer.com/sfz-to-hise-converter/manual/" target="_blank">
+                    Read the SFZ to HISE converter User Manual >>
+                </a>
+            </p>
+            <p>
+                <a href="https://keypleezer.com/sfz-to-hise-converter/" target="_blank">Use online</a> <em>(latest version)</em> <!-- |  
+                <a href="https://github.com/anderseklov/sfz-to-hise-converter-translator/" target="_blank">
+                    Visit open source code project</a> <em>(Github)</em> --> |  contact: <a href="https://twitter.com/anderseklov" target="_blank">Twitter
+                </a>
+                 || 
+                <a href="https://keypleezer.com/support/contact-us/" target="_blank">KeyPleezer.com</a>
+            </p>
+            <p>Written by Anders Eklöv and licensed under the MIT open source license. <a href="https://keypleezer.com/files-press/licenses/sfz-to-hise-converter-license.zip" target="_blank">Download license</a> (md/rtf/html/pdf).</p>
+            <p><span class="badge badge-pill badge-warning">Current version: v0.5.2</span></p>
+
+
+            <h3>What is SFZ and what is HISE?</h3>
+
+            <p>
+                <a href="https://sfzformat.com/" target="_blank">SFZ</a> is a plain-text markup language for sampled musical 
+                instruments used in a couple of software samplers on the market, most notably the 
+                <a href="https://www.plogue.com/products/sforzando.html" target="_blank">Sforzando Sampler, by Plogue</a>. 
+                <a href="https://www.hise.audio/" target="_blank">HISE</a> is an open source <strong>VST / AU / AAX instrument 
+                and effects production framework</strong> made by Christoph Hart. HISE has it's own internal SFZ parser/importer. 
+                <strong>This tool is intended as a stand-alone alternative and extra-data extraction tool</strong>. Use if SFZ 
+                import is less than successful in the HISE application, or if you wish to pre-process sample paths and/or use SFZ's 
+                hierarchical header data as settings for groups of samples. Read the manual for full instructions and information.
+            </p>
+
+        </div>
+        <!-- END - SFZ to HISE - app footer with description (copy-paste bottom) -->
+        
+
+        
+        <!-- these are included in keypleezer php files -->
+
+
+        <!-- SFZ TO HISE JavaScript Application script includes -->
+        <script src="sfz-to-hise-app-js/sfz-to-hise-main.js" charset="utf-8"></script>
+        <script src="sfz-to-hise-app-js/sfz-to-hise-pre-run-string-replacements.js" charset="utf-8"></script>
+        <script src="sfz-to-hise-app-js/sfz-to-hise-header-processing.js" charset="utf-8"></script>
+
+        <script type="text/javascript">
+
+            // SFZ to HISE UI functions and helpers.
+            
+            // FUNCTION EXPANDING THE BOXES WITH THE OUTPUT TEXTS.
+            function toggleExpandDiv(input) {
+                if (input == "expandSfzButton") {
+                    var element = document.getElementById("sfzOutputParent");
+                    element.classList.toggle("expandDiv");
+                }
+                if (input == "expandHiseButton") {
+                    var element = document.getElementById("hiseOutputParent");
+                    element.classList.toggle("expandDiv");
+                }
+            }
+
+        </script>
+
+    </body>
+</html>

@@ -18,16 +18,17 @@ https://keypleezer.com/sfz-to-hise-converter/manual/
 
 **The following SFZ headers are currently supported (analyzed):**
 
-- <control>, <global>, <group> and <region>.
+- `<control>`, `<global>`, `<group>` and `<region>`.
 
 These are the main headers used for opcodes that is used to create the components for each sample used in a **HISE** XML samplemap. 
 
 The following SFZ headers are ***being integrated***:
 
-- <master>, <curve>, <effect>, <midi>.
+- `<master>`, `<curve>`, `<effect>`, `<midi>`.
 
 [Read about the HISE markup tags and SFZ opcodes used in the Manual >>](https://keypleezer.com/sfz-to-hise-converter/manual/)
 
 ## License
 
 This repo is licensed under the MIT open source license (with additional points). The license can be found in the `_license` folder or [downloaded here](https://keypleezer.com/files-press/licenses/sfz-to-hise-converter-license.zip) (html/md/pdf/rtf).
+

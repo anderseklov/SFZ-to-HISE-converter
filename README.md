@@ -30,5 +30,5 @@ The following SFZ headers are ***being integrated***:
 
 ## License
 
-This repo is licensed under the MIT open source license (with additional points). The license can be found in the `_license` folder or [downloaded here](https://keypleezer.com/files-press/licenses/sfz-to-hise-converter-license.zip) (html/md/pdf/rtf).
+This repo is licensed under the MIT open source license (with additional points). The license can be found in the `_license` folder or [downloaded here](https://static-files.keypleezer.com/files-press/licenses/sfz-to-hise-converter-license.zip) (html/md/pdf/rtf).
 
